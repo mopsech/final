@@ -5,7 +5,7 @@
 local NeverLose = loadstring(game:HttpGet("https://raw.githubusercontent.com/4lpaca-pin/NeverLose/refs/heads/main/source.luau"))()
 
 -- ========================================
--- ===== ВСЕ ФУНКЦИИ ИЗ ТВОЕГО КОДА (СОХРАНЕНЫ) =====
+-- ===== ОСНОВНЫЕ НАСТРОЙКИ =====
 -- ========================================
 
 local Players = game:GetService("Players")
@@ -52,6 +52,112 @@ local function removeCore()
         end
     end)
 end
+
+-- ========================================
+-- ===== ЦВЕТА ПО УМОЛЧАНИЮ =====
+-- ========================================
+
+local DEFAULT_COLORS = {
+    Murder = Color3.fromRGB(255, 60, 60),
+    Sheriff = Color3.fromRGB(60, 120, 255),
+    Innocent = Color3.fromRGB(150, 80, 240),
+    Chams = Color3.fromRGB(138, 43, 226),
+    Tracers = Color3.fromRGB(138, 43, 226),
+    Trails = Color3.fromRGB(138, 43, 226),
+    JumpCircles = Color3.fromRGB(138, 43, 226),
+    Aura = Color3.fromRGB(133, 220, 255),
+    ChinaHat = Color3.fromRGB(0, 255, 255),
+}
+
+-- ========================================
+-- ===== НАСТРОЙКИ =====
+-- ========================================
+
+local Settings = {
+    MurderESP = false, MurderColor = DEFAULT_COLORS.Murder,
+    SheriffESP = false, SheriffColor = DEFAULT_COLORS.Sheriff,
+    InnocentESP = false, InnocentColor = DEFAULT_COLORS.Innocent,
+    ChamsEnabled = false, ChamsColor = DEFAULT_COLORS.Chams,
+    TracersEnabled = false, TracersColor = DEFAULT_COLORS.Tracers,
+    JumpCircles = false, JumpCirclesColor = DEFAULT_COLORS.JumpCircles,
+    Trails = false, TrailsColor = DEFAULT_COLORS.Trails,
+    RGBHumanoid = false, XRayEnabled = false,
+    BloomEnabled = false, ColorCorrectionEnabled = false, VignetteEnabled = false,
+    ChinaHatEnabled = false, ChinaHatStyle = "Classic", ChinaHatRainbow = false,
+    ChinaHatRadius = 2.4, ChinaHatHeight = 1.6, ChinaHatRainbowSpeed = 5,
+    ChinaHatTransparency = 0.3, ChinaHatColor = DEFAULT_COLORS.ChinaHat,
+    ChinaHatReflectance = 0, ChinaHatSides = 25,
+    AuraEnabled = false, AuraColor = DEFAULT_COLORS.Aura,
+    OrbizEnabled = false, JerkEnabled = false,
+    TexturePackEnabled = false,
+    CustomSkyId = "",
+    StretchEnabled = false, StretchFactor = 0.75,
+    FlyEnabled = false, FlySpeed = 50,
+    BHopEnabled = false, BHopSpeed = 30,
+    SpinBotEnabled = false, SpinBotSpeed = 9999,
+    NoclipEnabled = false, AntiFlingEnabled = false, WallHopEnabled = false,
+    FovAimbotEnabled = false, FovRadius = 120,
+    KillAllEnabled = false,
+    ShootButtonEnabled = false, SheriffAutoShootEnabled = false,
+    FlingMurderer = false, FlingSheriff = false,
+    GrabGunEnabled = false,
+    AimSmoothness = 0.5, AimPredict = true, AimWallCheck = true,
+    AimHitChance = 80, AimTargetPart = "Head",
+    AutoFarmEnabled = false, AutoFarmSpeed = 20,
+    AutoFarmCoinLimit = 40, AutoFarmCoinDelay = 0.15,
+    AutoRespawn = true, AntiAFKEnabled = false,
+    AnimPackEnabled = false, AnimPack = "",
+    Binds = {},
+}
+
+-- ========================================
+-- ===== КЭШ =====
+-- ========================================
+
+local Cache = {
+    FlyKeys = {F=0, B=0, L=0, R=0},
+    FlyRunning = false, FlyBodyGyro = nil, FlyBodyVelocity = nil,
+    FlyKeyConn = nil, FlyKeyEndConn = nil, FlyConn = nil,
+    BHopConn = nil, BHopBV = nil, BHopActive = false,
+    Highlights = {},
+    ChamsPartsList = {},
+    PostEffects = {},
+    JumpTracking = {wasJumping = false},
+    RGBConnection = nil,
+    AutoFarmConn = nil,
+    CurrentTween = nil,
+    XRayParts = {},
+    Tracers = {},
+    TrailAttachments = {},
+    FovCircle = nil,
+    FovConnection = nil,
+    mainConn = nil,
+    WallHopConnection = nil,
+    SheriffAutoShootConnection = nil,
+    ChinaHatParts = {},
+    ChinaHatConnection = nil,
+    ChinaHatDrawings = {},
+    TextureState = {},
+    TextureVariantsBuilt = false,
+    AuraParticles = {},
+    AuraCache = {},
+    JerkConnection = nil,
+    SpinConn = nil,
+    OrbizFolder = nil,
+    OrbizParticles = {},
+    OrbizConnection = nil,
+    KillAllConn = nil,
+    KillAllRemote = nil,
+    ShootButton = nil,
+    GrabGunRunning = false,
+    afkConn = nil,
+    noclipConn = nil,
+    StretchConnection = nil,
+}
+
+-- ========================================
+-- ===== ПРОВЕРКИ РОЛЕЙ =====
+-- ========================================
 
 local function checkKnife(p)
     if not p or not p.Character then return false end
@@ -156,130 +262,6 @@ local function getGroundY(origin)
     if result then return result.Position.Y end
     return origin.Y - 3
 end
-
-local function teleportToRole(role)
-    if not LocalPlayer.Character then notify("Телепорт", "Персонаж не найден", 2); return end
-    local myHRP = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-    if not myHRP then notify("Телепорт", "HRP не найден", 2); return end
-    local target, targetDist = nil, math.huge
-    for _, player in ipairs(Players:GetPlayers()) do
-        if player ~= LocalPlayer and player.Character then
-            local hasRole = (role == "Убийца" and checkKnife(player)) or (role == "Шериф" and checkGun(player))
-            if hasRole then
-                local hrp = player.Character:FindFirstChild("HumanoidRootPart")
-                if hrp then
-                    local dist = (myHRP.Position - hrp.Position).Magnitude
-                    if dist < targetDist then targetDist = dist; target = player end
-                end
-            end
-        end
-    end
-    if not target then notify("Телепорт", role .. " не найден", 2); return end
-    local tHRP = target.Character:FindFirstChild("HumanoidRootPart")
-    if tHRP then myHRP.CFrame = tHRP.CFrame * CFrame.new(0, 3, 2); notify("Телепорт", "Телепорт к " .. role, 2) end
-end
-
--- ========================================
--- ===== ЦВЕТА ПО УМОЛЧАНИЮ =====
--- ========================================
-
-local DEFAULT_COLORS = {
-    Murder = Color3.fromRGB(255, 60, 60),
-    Sheriff = Color3.fromRGB(60, 120, 255),
-    Innocent = Color3.fromRGB(150, 80, 240),
-    Chams = Color3.fromRGB(138, 43, 226),
-    Tracers = Color3.fromRGB(138, 43, 226),
-    Trails = Color3.fromRGB(138, 43, 226),
-    JumpCircles = Color3.fromRGB(138, 43, 226),
-    Aura = Color3.fromRGB(133, 220, 255),
-    ChinaHat = Color3.fromRGB(0, 255, 255),
-}
-
--- ========================================
--- ===== НАСТРОЙКИ =====
--- ========================================
-
-local Settings = {
-    MurderESP = false, MurderColor = DEFAULT_COLORS.Murder,
-    SheriffESP = false, SheriffColor = DEFAULT_COLORS.Sheriff,
-    InnocentESP = false, InnocentColor = DEFAULT_COLORS.Innocent,
-    ChamsEnabled = false, ChamsColor = DEFAULT_COLORS.Chams,
-    TracersEnabled = false, TracersColor = DEFAULT_COLORS.Tracers,
-    JumpCircles = false, JumpCirclesColor = DEFAULT_COLORS.JumpCircles,
-    Trails = false, TrailsColor = DEFAULT_COLORS.Trails,
-    RGBHumanoid = false, XRayEnabled = false,
-    BloomEnabled = false, ColorCorrectionEnabled = false, VignetteEnabled = false,
-    ChinaHatEnabled = false, ChinaHatStyle = "Classic", ChinaHatRainbow = false,
-    ChinaHatRadius = 2.4, ChinaHatHeight = 1.6, ChinaHatRainbowSpeed = 5,
-    ChinaHatTransparency = 0.3, ChinaHatColor = DEFAULT_COLORS.ChinaHat,
-    ChinaHatReflectance = 0, ChinaHatSides = 25,
-    AuraEnabled = false, AuraColor = DEFAULT_COLORS.Aura,
-    OrbizEnabled = false, JerkEnabled = false,
-    TexturePackEnabled = false,
-    CustomSkyId = "",
-    StretchEnabled = false, StretchFactor = 0.75,
-    FlyEnabled = false, FlySpeed = 50,
-    BHopEnabled = false, BHopSpeed = 30,
-    SpinBotEnabled = false, SpinBotSpeed = 9999,
-    NoclipEnabled = false, AntiFlingEnabled = false, WallHopEnabled = false,
-    FovAimbotEnabled = false, FovRadius = 120,
-    KillAllEnabled = false,
-    ShootButtonEnabled = false, SheriffAutoShootEnabled = false,
-    FlingMurderer = false, FlingSheriff = false,
-    GrabGunEnabled = false,
-    AimSmoothness = 0.5, AimPredict = true, AimWallCheck = true,
-    AimHitChance = 80, AimTargetPart = "Head",
-    AutoFarmEnabled = false, AutoFarmSpeed = 20,
-    AutoFarmCoinLimit = 40, AutoFarmCoinDelay = 0.15,
-    AutoRespawn = true, AntiAFKEnabled = false,
-    AnimPackEnabled = false, AnimPack = "",
-    Binds = {},
-}
-
--- ========================================
--- ===== КЭШ =====
--- ========================================
-
-local Cache = {
-    FlyKeys = {F=0, B=0, L=0, R=0},
-    FlyRunning = false, FlyBodyGyro = nil, FlyBodyVelocity = nil,
-    FlyKeyConn = nil, FlyKeyEndConn = nil, FlyConn = nil,
-    BHopConn = nil, BHopBV = nil, BHopActive = false,
-    Highlights = {},
-    ChamsPartsList = {},
-    PostEffects = {},
-    JumpTracking = {wasJumping = false},
-    RGBConnection = nil,
-    AutoFarmConn = nil,
-    CurrentTween = nil,
-    XRayParts = {},
-    Tracers = {},
-    TrailAttachments = {},
-    FovCircle = nil,
-    FovConnection = nil,
-    mainConn = nil,
-    WallHopConnection = nil,
-    SheriffAutoShootConnection = nil,
-    ChinaHatParts = {},
-    ChinaHatConnection = nil,
-    ChinaHatDrawings = {},
-    TextureState = {},
-    TextureVariantsBuilt = false,
-    AuraParticles = {},
-    AuraCache = {},
-    JerkConnection = nil,
-    SpinConn = nil,
-    OrbizFolder = nil,
-    OrbizParticles = {},
-    OrbizConnection = nil,
-    KillAllConn = nil,
-    KillAllRemote = nil,
-    ShootButton = nil,
-    GrabGunRunning = false,
-    afkConn = nil,
-    noclipConn = nil,
-    StretchConnection = nil,
-}
 
 -- ========================================
 -- ===== АНИМАЦИИ =====
@@ -514,84 +496,94 @@ local function toggleSpinBot(value)
 end
 
 -- ========================================
--- ===== JERK =====
+-- ===== WALL HOP =====
 -- ========================================
 
-local function toggleJerk(value)
-    Settings.JerkEnabled = value
+local function toggleWallHop(value)
+    Settings.WallHopEnabled = value
+    safeDisconnect(Cache.WallHopConnection); Cache.WallHopConnection = nil
     if value then
-        if Cache.JerkConnection then Cache.JerkConnection:Disconnect() end
-        Cache.JerkConnection = RunService.Heartbeat:Connect(function()
+        Cache.WallHopConnection = RunService.Heartbeat:Connect(function()
             if not LocalPlayer.Character then return end
-            local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then hrp.AssemblyLinearVelocity = Vector3.new(math.random(-50,50), math.random(-30,30), math.random(-50,50)) end
+            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
+            if hum and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+                hum:ChangeState(Enum.HumanoidStateType.Jumping)
+            end
         end)
-        notify("Jerk", "Включен", 2)
+        notify("Wall Hop", "Включен (зажми Space)", 2)
     else
-        if Cache.JerkConnection then Cache.JerkConnection:Disconnect() end; Cache.JerkConnection = nil
-        notify("Jerk", "Выключен", 2)
+        notify("Wall Hop", "Выключен", 2)
     end
 end
 
 -- ========================================
--- ===== ORBIZ =====
+-- ===== NOCLIP =====
 -- ========================================
 
-local function createOrbiz()
-    if Cache.OrbizFolder then Cache.OrbizFolder:Destroy() end
-    if Cache.OrbizConnection then Cache.OrbizConnection:Disconnect() end
-    Cache.OrbizParticles = {}
-    if not Settings.OrbizEnabled then return end
-    local char = LocalPlayer.Character
-    if not char then return end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if not root then return end
-
-    local folder = Instance.new("Folder")
-    folder.Name = "Orbiz3D"
-    folder.Parent = workspace
-    Cache.OrbizFolder = folder
-
-    local COUNT = 800
-    for i = 1, COUNT do
-        local part = Instance.new("Part")
-        part.Shape = Enum.PartType.Ball
-        part.Size = Vector3.new(0.2 + math.random() * 0.3, 0.2 + math.random() * 0.3, 0.2 + math.random() * 0.3)
-        part.BrickColor = BrickColor.new("Bright violet")
-        part.Material = Enum.Material.Neon
-        part.Transparency = 0.2 + math.random() * 0.5
-        part.Anchored = true
-        part.CanCollide = false
-        part.Parent = folder
-        local range = 80
-        part.Position = root.Position + Vector3.new((math.random()-0.5)*range*2, math.random()*50+20, (math.random()-0.5)*range*2)
-        table.insert(Cache.OrbizParticles, {part=part, speed=0.2+math.random()*0.8, driftX=(math.random()-0.5)*0.5, driftZ=(math.random()-0.5)*0.5, startY=part.Position.Y})
+local function setupNoclip(value)
+    if value then
+        if not Cache.noclipConn then
+            Cache.noclipConn = RunService.Stepped:Connect(function()
+                if not LocalPlayer.Character then return end
+                for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+            end)
+        end
+    else
+        if Cache.noclipConn then Cache.noclipConn:Disconnect(); Cache.noclipConn = nil end
     end
+end
 
-    Cache.OrbizConnection = RunService.Heartbeat:Connect(function()
-        if not Settings.OrbizEnabled then return end
-        local rootPos = root and root.Position or Vector3.new(0,0,0)
-        local range = 80
-        for _, data in pairs(Cache.OrbizParticles) do
-            local part = data.part
-            if not part or not part.Parent then continue end
-            local pos = part.Position
-            pos = pos - Vector3.new(0, data.speed * 0.08, 0)
-            pos = pos + Vector3.new(data.driftX * 0.03, 0, data.driftZ * 0.03)
-            if pos.Y < rootPos.Y - 10 then
-                pos = Vector3.new(rootPos.X + (math.random()-0.5)*range*2, rootPos.Y + 30 + math.random()*40, rootPos.Z + (math.random()-0.5)*range*2)
-                part.Transparency = 0.2 + math.random() * 0.5
-                part.Size = Vector3.new(0.2 + math.random() * 0.4, 0.2 + math.random() * 0.4, 0.2 + math.random() * 0.4)
+-- ========================================
+-- ===== ANTI FLING =====
+-- ========================================
+
+local function setupAntiFling()
+    safeDisconnect(Cache.antiFlingConn); Cache.antiFlingConn = nil
+    if not Settings.AntiFlingEnabled then return end
+    Cache.antiFlingConn = RunService.Heartbeat:Connect(function()
+        if not Settings.AntiFlingEnabled then return end
+        for _, player in ipairs(Players:GetPlayers()) do
+            if player ~= LocalPlayer and player.Character then
+                for _, part in ipairs(player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
+                end
             end
-            part.Position = pos
+        end
+        local char = LocalPlayer.Character
+        if not char then return end
+        local hrp = char:FindFirstChild("HumanoidRootPart")
+        if hrp then
+            if hrp.AssemblyLinearVelocity.Magnitude > 200 then hrp.AssemblyLinearVelocity = Vector3.new(0,0,0) end
+            if hrp.AssemblyAngularVelocity.Magnitude > 20 then hrp.AssemblyAngularVelocity = Vector3.new(0,0,0) end
         end
     end)
 end
 
-local function toggleOrbiz(value)
-    Settings.OrbizEnabled = value
-    createOrbiz()
-    notify("Орбизы", value and "Включены" or "Выключены", 2)
+-- ========================================
+-- ===== ESP =====
+-- ========================================
+
+local function createOrUpdateHighlight(player, color)
+    if not player or not player.Character then return end
+    local char = player.Character
+    local hl = char:FindFirstChild("PH_ESP")
+    if not hl then hl = Instance.new("Highlight"); hl.Name = "PH_ESP"; hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; hl.Parent = char end
+    hl.FillColor = color; hl.OutlineColor = color; hl.FillTransparency = 0.4; hl.OutlineTransparency = 0; hl.Enabled = true
+    Cache.Highlights[player.UserId] = hl
+end
+
+local function removeHighlight(player)
+    if not player or not player.Character then return end
+    local hl = player.Character:FindFirstChild("PH_ESP")
+    if hl then pcall(function() hl:Destroy() end) end
+    Cache.Highlights[player.UserId] = nil
+end
+
+local function clearAllHighlights()
+    for _, hl in pairs(Cache.Highlights) do if hl then pcall(function() hl:Destroy() end) end end
+    Cache.Highlights = {}
 end
 
 -- ========================================
@@ -649,29 +641,9 @@ local function clearAllChams()
     Cache.ChamsPartsList = {}
 end
 
--- ========================================
--- ===== ESP =====
--- ========================================
-
-local function createOrUpdateHighlight(player, color)
-    if not player or not player.Character then return end
-    local char = player.Character
-    local hl = char:FindFirstChild("PH_ESP")
-    if not hl then hl = Instance.new("Highlight"); hl.Name = "PH_ESP"; hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop; hl.Parent = char end
-    hl.FillColor = color; hl.OutlineColor = color; hl.FillTransparency = 0.4; hl.OutlineTransparency = 0; hl.Enabled = true
-    Cache.Highlights[player.UserId] = hl
-end
-
-local function removeHighlight(player)
-    if not player or not player.Character then return end
-    local hl = player.Character:FindFirstChild("PH_ESP")
-    if hl then pcall(function() hl:Destroy() end) end
-    Cache.Highlights[player.UserId] = nil
-end
-
-local function clearAllHighlights()
-    for _, hl in pairs(Cache.Highlights) do if hl then pcall(function() hl:Destroy() end) end end
-    Cache.Highlights = {}
+local function updateChamsForAll()
+    if Settings.ChamsEnabled then for _, p in ipairs(Players:GetPlayers()) do cacheCharacterParts(p); applyChams(p) end
+    else clearAllChams() end
 end
 
 -- ========================================
@@ -900,6 +872,11 @@ local function setupSky(skyName)
     notify("Небо", "Загружено: " .. skyName, 2)
 end
 
+local function removeSky()
+    for _, obj in ipairs(Lighting:GetChildren()) do if obj:IsA("Sky") then obj:Destroy() end end
+    notify("Небо", "Удалено", 2)
+end
+
 -- ========================================
 -- ===== TEXTURE PACK =====
 -- ========================================
@@ -1105,6 +1082,61 @@ local function toggleChinaHat(value)
         if Cache.ChinaHatConnection then safeDisconnect(Cache.ChinaHatConnection); Cache.ChinaHatConnection = nil end
         notify("China Hat", "Выключен", 2)
     end
+end
+
+-- ========================================
+-- ===== ORBIZ =====
+-- ========================================
+
+local function createOrbiz()
+    if Cache.OrbizFolder then Cache.OrbizFolder:Destroy() end
+    if Cache.OrbizConnection then Cache.OrbizConnection:Disconnect() end
+    Cache.OrbizParticles = {}
+    if not Settings.OrbizEnabled then return end
+    local char = LocalPlayer.Character
+    if not char then return end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+
+    local folder = Instance.new("Folder")
+    folder.Name = "Orbiz3D"
+    folder.Parent = workspace
+    Cache.OrbizFolder = folder
+
+    local COUNT = 800
+    for i = 1, COUNT do
+        local part = Instance.new("Part")
+        part.Shape = Enum.PartType.Ball
+        part.Size = Vector3.new(0.2 + math.random() * 0.3, 0.2 + math.random() * 0.3, 0.2 + math.random() * 0.3)
+        part.BrickColor = BrickColor.new("Bright violet")
+        part.Material = Enum.Material.Neon
+        part.Transparency = 0.2 + math.random() * 0.5
+        part.Anchored = true
+        part.CanCollide = false
+        part.Parent = folder
+        local range = 80
+        part.Position = root.Position + Vector3.new((math.random()-0.5)*range*2, math.random()*50+20, (math.random()-0.5)*range*2)
+        table.insert(Cache.OrbizParticles, {part=part, speed=0.2+math.random()*0.8, driftX=(math.random()-0.5)*0.5, driftZ=(math.random()-0.5)*0.5, startY=part.Position.Y})
+    end
+
+    Cache.OrbizConnection = RunService.Heartbeat:Connect(function()
+        if not Settings.OrbizEnabled then return end
+        local rootPos = root and root.Position or Vector3.new(0,0,0)
+        local range = 80
+        for _, data in pairs(Cache.OrbizParticles) do
+            local part = data.part
+            if not part or not part.Parent then continue end
+            local pos = part.Position
+            pos = pos - Vector3.new(0, data.speed * 0.08, 0)
+            pos = pos + Vector3.new(data.driftX * 0.03, 0, data.driftZ * 0.03)
+            if pos.Y < rootPos.Y - 10 then
+                pos = Vector3.new(rootPos.X + (math.random()-0.5)*range*2, rootPos.Y + 30 + math.random()*40, rootPos.Z + (math.random()-0.5)*range*2)
+                part.Transparency = 0.2 + math.random() * 0.5
+                part.Size = Vector3.new(0.2 + math.random() * 0.4, 0.2 + math.random() * 0.4, 0.2 + math.random() * 0.4)
+            end
+            part.Position = pos
+        end
+    end)
 end
 
 -- ========================================
@@ -1605,72 +1637,6 @@ local function sheriffAutoShootLoop()
 end
 
 -- ========================================
--- ===== WALL HOP =====
--- ========================================
-
-local function toggleWallHop(value)
-    Settings.WallHopEnabled = value
-    safeDisconnect(Cache.WallHopConnection); Cache.WallHopConnection = nil
-    if value then
-        Cache.WallHopConnection = RunService.Heartbeat:Connect(function()
-            if not LocalPlayer.Character then return end
-            local hum = LocalPlayer.Character:FindFirstChildOfClass("Humanoid")
-            if hum and UserInputService:IsKeyDown(Enum.KeyCode.Space) then
-                hum:ChangeState(Enum.HumanoidStateType.Jumping)
-            end
-        end)
-        notify("Wall Hop", "Включен (зажми Space)", 2)
-    else
-        notify("Wall Hop", "Выключен", 2)
-    end
-end
-
--- ========================================
--- ===== ANTI FLING =====
--- ========================================
-
-local function setupAntiFling()
-    safeDisconnect(Cache.antiFlingConn); Cache.antiFlingConn = nil
-    if not Settings.AntiFlingEnabled then return end
-    Cache.antiFlingConn = RunService.Heartbeat:Connect(function()
-        if not Settings.AntiFlingEnabled then return end
-        for _, player in ipairs(Players:GetPlayers()) do
-            if player ~= LocalPlayer and player.Character then
-                for _, part in ipairs(player.Character:GetDescendants()) do
-                    if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
-                end
-            end
-        end
-        local char = LocalPlayer.Character
-        if not char then return end
-        local hrp = char:FindFirstChild("HumanoidRootPart")
-        if hrp then
-            if hrp.AssemblyLinearVelocity.Magnitude > 200 then hrp.AssemblyLinearVelocity = Vector3.new(0,0,0) end
-            if hrp.AssemblyAngularVelocity.Magnitude > 20 then hrp.AssemblyAngularVelocity = Vector3.new(0,0,0) end
-        end
-    end)
-end
-
--- ========================================
--- ===== NOCLIP =====
--- ========================================
-
-local function setupNoclip(value)
-    if value then
-        if not Cache.noclipConn then
-            Cache.noclipConn = RunService.Stepped:Connect(function()
-                if not LocalPlayer.Character then return end
-                for _, part in ipairs(LocalPlayer.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then part.CanCollide = false end
-                end
-            end)
-        end
-    else
-        if Cache.noclipConn then Cache.noclipConn:Disconnect(); Cache.noclipConn = nil end
-    end
-end
-
--- ========================================
 -- ===== ANTI AFK =====
 -- ========================================
 
@@ -1883,7 +1849,7 @@ local Window = NeverLose:CreateWindow({
     Logo = NeverLose.GlobalLogo,
     Name = "Planet Hub",
     Content = "v3.0 Ultimate",
-    Size = NeverLose.Scales.Mobile,
+    Size = NeverLose.Scales.Default,
     ConfigFolder = "PlanetHubConfigs",
     Enable3DRenderer = false,
     Keybind = "J"
@@ -1897,31 +1863,57 @@ local Window = NeverLose:CreateWindow({
 local VisualsTab = Window:AddTab({Name = "Visuals", Icon = "eye"})
 
 local ESPSection = VisualsTab:AddSection({Name = "ESP", Position = "Left"})
-ESPSection:AddLabel("Murder ESP"):AddToggle({Default = Settings.MurderESP, Flag = "MurderESP", Callback = function(v) Settings.MurderESP = v end})
-ESPSection:AddColorPicker({Default = Settings.MurderColor, Flag = "MurderColor", Callback = function(c) Settings.MurderColor = c end})
-ESPSection:AddLabel("Sheriff ESP"):AddToggle({Default = Settings.SheriffESP, Flag = "SheriffESP", Callback = function(v) Settings.SheriffESP = v end})
-ESPSection:AddColorPicker({Default = Settings.SheriffColor, Flag = "SheriffColor", Callback = function(c) Settings.SheriffColor = c end})
-ESPSection:AddLabel("Innocent ESP"):AddToggle({Default = Settings.InnocentESP, Flag = "InnocentESP", Callback = function(v) Settings.InnocentESP = v end})
-ESPSection:AddColorPicker({Default = Settings.InnocentColor, Flag = "InnocentColor", Callback = function(c) Settings.InnocentColor = c end})
+ESPSection:AddLabel("Murder ESP"):AddToggle({Default = Settings.MurderESP, Flag = "MurderESP", Callback = function(v) 
+    Settings.MurderESP = v 
+    startMainUpdate()
+end})
+ESPSection:AddColorPicker({Default = Settings.MurderColor, Flag = "MurderColor", Callback = function(c) 
+    Settings.MurderColor = c 
+    startMainUpdate()
+end})
+ESPSection:AddLabel("Sheriff ESP"):AddToggle({Default = Settings.SheriffESP, Flag = "SheriffESP", Callback = function(v) 
+    Settings.SheriffESP = v 
+    startMainUpdate()
+end})
+ESPSection:AddColorPicker({Default = Settings.SheriffColor, Flag = "SheriffColor", Callback = function(c) 
+    Settings.SheriffColor = c 
+    startMainUpdate()
+end})
+ESPSection:AddLabel("Innocent ESP"):AddToggle({Default = Settings.InnocentESP, Flag = "InnocentESP", Callback = function(v) 
+    Settings.InnocentESP = v 
+    startMainUpdate()
+end})
+ESPSection:AddColorPicker({Default = Settings.InnocentColor, Flag = "InnocentColor", Callback = function(c) 
+    Settings.InnocentColor = c 
+    startMainUpdate()
+end})
 ESPSection:AddLabel("Tracers"):AddToggle({Default = Settings.TracersEnabled, Flag = "Tracers", Callback = function(v)
     Settings.TracersEnabled = v
-    if v then for _,p in ipairs(Players:GetPlayers()) do if p ~= LocalPlayer then createTracer(p) end end
-    else clearAllTracers() end
+    if v then 
+        for _,p in ipairs(Players:GetPlayers()) do 
+            if p ~= LocalPlayer then createTracer(p) end 
+        end
+    else 
+        clearAllTracers() 
+    end
+    startMainUpdate()
 end})
 ESPSection:AddColorPicker({Default = Settings.TracersColor, Flag = "TracersColor", Callback = function(c)
     Settings.TracersColor = c
-    for userId, line in pairs(Cache.Tracers) do line.Color = c end
+    for userId, line in pairs(Cache.Tracers) do
+        line.Color = c
+    end
 end})
 
 local ChamsSection = VisualsTab:AddSection({Name = "Chams", Position = "Right"})
 ChamsSection:AddLabel("Enable"):AddToggle({Default = Settings.ChamsEnabled, Flag = "Chams", Callback = function(v)
     Settings.ChamsEnabled = v
-    if v then for _,p in ipairs(Players:GetPlayers()) do cacheCharacterParts(p); applyChams(p) end
-    else clearAllChams() end
+    updateChamsForAll()
+    startMainUpdate()
 end})
 ChamsSection:AddColorPicker({Default = Settings.ChamsColor, Flag = "ChamsColor", Callback = function(c)
     Settings.ChamsColor = c
-    if Settings.ChamsEnabled then for _,p in ipairs(Players:GetPlayers()) do applyChams(p) end end
+    if Settings.ChamsEnabled then updateChamsForAll() end
 end})
 ChamsSection:AddLabel("RGB Humanoid"):AddToggle({Default = Settings.RGBHumanoid, Flag = "RGBHumanoid", Callback = function(v)
     Settings.RGBHumanoid = v
@@ -1997,8 +1989,8 @@ local CombatTab = Window:AddTab({Name = "Combat", Icon = "crosshairs"})
 local CombatSection = CombatTab:AddSection({Name = "Combat", Position = "Left"})
 CombatSection:AddLabel("Shoot Button"):AddToggle({Default = Settings.ShootButtonEnabled, Flag = "ShootButton", Callback = function(v)
     Settings.ShootButtonEnabled = v
-    if v then createShootButton() else if Cache.ShootButton then pcall(function() Cache.ShootButton:Destroy() end); Cache.ShootButton = nil end end
-})
+    if v then createShootButton() else if Cache.ShootButton then pcall(function() Cache.ShootButton:Destroy() end); Cache.ShootButton = nil end
+end})
 CombatSection:AddLabel("Sheriff Auto"):AddToggle({Default = Settings.SheriffAutoShootEnabled, Flag = "SheriffAutoShoot", Callback = function(v)
     Settings.SheriffAutoShootEnabled = v
     safeDisconnect(Cache.SheriffAutoShootConnection); Cache.SheriffAutoShootConnection = nil
@@ -2006,15 +1998,32 @@ CombatSection:AddLabel("Sheriff Auto"):AddToggle({Default = Settings.SheriffAuto
 end})
 CombatSection:AddLabel("Kill All"):AddToggle({Default = Settings.KillAllEnabled, Flag = "KillAll", Callback = function(v)
     Settings.KillAllEnabled = v
-    if v then if not Cache.KillAllRemote then FindKillRemote() end; setupKillAll() else safeDisconnect(Cache.KillAllConn); end
+    if v then 
+        if not Cache.KillAllRemote then FindKillRemote() end
+        setupKillAll() 
+    else 
+        safeDisconnect(Cache.KillAllConn) 
+    end
 end})
 CombatSection:AddLabel("Fling Murderer"):AddToggle({Default = Settings.FlingMurderer, Flag = "FlingMurderer", Callback = function(v)
     Settings.FlingMurderer = v
-    if v then local m = getMurdererFling(); if m then flingPlayer(m) else notify("Флинг", "Убийца не найден!", 2); Settings.FlingMurderer = false end end
+    if v then 
+        local m = getMurdererFling()
+        if m then flingPlayer(m) else 
+            notify("Флинг", "Убийца не найден!", 2)
+            Settings.FlingMurderer = false 
+        end 
+    end
 end})
 CombatSection:AddLabel("Fling Sheriff"):AddToggle({Default = Settings.FlingSheriff, Flag = "FlingSheriff", Callback = function(v)
     Settings.FlingSheriff = v
-    if v then local s = getSheriffFling(); if s then flingPlayer(s) else notify("Флинг", "Шериф не найден!", 2); Settings.FlingSheriff = false end end
+    if v then 
+        local s = getSheriffFling()
+        if s then flingPlayer(s) else 
+            notify("Флинг", "Шериф не найден!", 2)
+            Settings.FlingSheriff = false 
+        end 
+    end
 end})
 CombatSection:AddLabel("Grab Gun"):AddToggle({Default = Settings.GrabGunEnabled, Flag = "GrabGun", Callback = function(v)
     Settings.GrabGunEnabled = v
@@ -2046,21 +2055,18 @@ local MovementTab = Window:AddTab({Name = "Movement", Icon = "wind"})
 
 local MovementSection = MovementTab:AddSection({Name = "Movement", Position = "Left"})
 MovementSection:AddLabel("Fly"):AddToggle({Default = Settings.FlyEnabled, Flag = "Fly", Callback = function(v)
-    Settings.FlyEnabled = v
-    if v then startFly() else stopFly() end
+    toggleFly(v)
 end})
 MovementSection:AddSlider({Default = 50, Min = 10, Max = 200, Flag = "FlySpeed", Callback = function(v)
     Settings.FlySpeed = v
 end})
 MovementSection:AddLabel("BHop"):AddToggle({Default = Settings.BHopEnabled, Flag = "BHop", Callback = function(v)
-    Settings.BHopEnabled = v
-    if v then startBHop() else stopBHop() end
+    toggleBHop(v)
 end})
 MovementSection:AddSlider({Default = 30, Min = 10, Max = 80, Flag = "BHopSpeed", Callback = function(v)
     Settings.BHopSpeed = v
 end})
 MovementSection:AddLabel("Spin Bot"):AddToggle({Default = Settings.SpinBotEnabled, Flag = "SpinBot", Callback = function(v)
-    Settings.SpinBotEnabled = v
     toggleSpinBot(v)
 end})
 MovementSection:AddSlider({Default = 9999, Min = 100, Max = 20000, Flag = "SpinSpeed", Callback = function(v)
@@ -2125,17 +2131,7 @@ local FunTab = Window:AddTab({Name = "Fun", Icon = "smile"})
 
 local FunSection = FunTab:AddSection({Name = "Fun", Position = "Left"})
 FunSection:AddLabel("Jerk"):AddToggle({Default = Settings.JerkEnabled, Flag = "Jerk", Callback = function(v)
-    Settings.JerkEnabled = v
-    if v then
-        if Cache.JerkConnection then Cache.JerkConnection:Disconnect() end
-        Cache.JerkConnection = RunService.Heartbeat:Connect(function()
-            if not LocalPlayer.Character then return end
-            local hrp = LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then hrp.AssemblyLinearVelocity = Vector3.new(math.random(-50,50), math.random(-30,30), math.random(-50,50)) end
-        end)
-    else
-        if Cache.JerkConnection then Cache.JerkConnection:Disconnect() end; Cache.JerkConnection = nil
-    end
+    toggleJerk(v)
 end})
 FunSection:AddLabel("Anti-AFK"):AddToggle({Default = Settings.AntiAFKEnabled, Flag = "AntiAFK", Callback = function(v)
     Settings.AntiAFKEnabled = v
@@ -2157,7 +2153,7 @@ Window.UserSettings:AddLabel("Menu Keybind"):AddKeybind({
 })
 
 Window.UserSettings:AddLabel('Menu Scale'):AddDropdown({
-    Default = "Mobile",
+    Default = "Default",
     Values = {"Default", 'Large', 'Mobile', 'Small'},
     Callback = function(v)
         Window:SetSize(NeverLose.Scales[v])
