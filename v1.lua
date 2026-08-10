@@ -1,8 +1,26 @@
 -- ========================================
--- ===== PLANET HUB (РАБОЧИЙ КАРКАС) =====
+-- ===== PLANET HUB v3.0 (NEVERLOSE) =====
 -- ========================================
 
 local NeverLose = loadstring(game:HttpGet("https://raw.githubusercontent.com/4lpaca-pin/NeverLose/refs/heads/main/source.luau"))()
+
+-- ========================================
+-- ===== ВСЕ ТВОИ НАСТРОЙКИ И ФУНКЦИИ =====
+-- ========================================
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
+local VirtualInputManager = game:GetService("VirtualInputManager")
+local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+-- ТВОИ ФУНКЦИИ (ESP, FLY, BHOP, CHAMS, И Т.Д.)
+-- ВСТАВЛЯЙ ИХ СЮДА ИЗ СВОЕГО РАБОЧЕГО КОДА
 
 -- ========================================
 -- ===== СОЗДАНИЕ ОКНА =====
@@ -10,327 +28,121 @@ local NeverLose = loadstring(game:HttpGet("https://raw.githubusercontent.com/4lp
 
 local Window = NeverLose:CreateWindow({
     Name = "Planet Hub",
-    Content = "v3.0",
+    Content = "v3.0 Ultimate",
     Size = UDim2.fromOffset(800, 600),
     Keybind = "J"
 })
 
 -- ========================================
--- ===== VISUALS TAB =====
+-- ===== ВКЛАДКИ =====
 -- ========================================
 
+-- 1. VISUALS
 local VisualsTab = Window:AddTab({Name = "Visuals", Icon = "eye"})
 
--- ESP
 local ESPSection = VisualsTab:AddSection({Name = "ESP", Position = "Left"})
-
 local MurderESP = ESPSection:AddLabel("Murder ESP")
-MurderESP:AddToggle({
-    Default = false,
-    Callback = function(v) print("Murder ESP:", v) end
-})
-MurderESP:AddColorPicker({
-    Default = Color3.fromRGB(255, 0, 0),
-    Callback = function(c) print("Murder Color:", c) end
-})
+MurderESP:AddToggle({Default = Settings.MurderESP, Callback = function(v) Settings.MurderESP = v; startMainUpdate() end})
+MurderESP:AddColorPicker({Default = Settings.MurderColor, Callback = function(c) Settings.MurderColor = c; startMainUpdate() end})
 
 local SheriffESP = ESPSection:AddLabel("Sheriff ESP")
-SheriffESP:AddToggle({
-    Default = false,
-    Callback = function(v) print("Sheriff ESP:", v) end
-})
-SheriffESP:AddColorPicker({
-    Default = Color3.fromRGB(0, 0, 255),
-    Callback = function(c) print("Sheriff Color:", c) end
-})
+SheriffESP:AddToggle({Default = Settings.SheriffESP, Callback = function(v) Settings.SheriffESP = v; startMainUpdate() end})
+SheriffESP:AddColorPicker({Default = Settings.SheriffColor, Callback = function(c) Settings.SheriffColor = c; startMainUpdate() end})
 
 local InnocentESP = ESPSection:AddLabel("Innocent ESP")
-InnocentESP:AddToggle({
-    Default = false,
-    Callback = function(v) print("Innocent ESP:", v) end
-})
-InnocentESP:AddColorPicker({
-    Default = Color3.fromRGB(0, 255, 0),
-    Callback = function(c) print("Innocent Color:", c) end
-})
+InnocentESP:AddToggle({Default = Settings.InnocentESP, Callback = function(v) Settings.InnocentESP = v; startMainUpdate() end})
+InnocentESP:AddColorPicker({Default = Settings.InnocentColor, Callback = function(c) Settings.InnocentColor = c; startMainUpdate() end})
 
-ESPSection:AddLabel("Tracers"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Tracers:", v) end
-})
-ESPSection:AddColorPicker({
-    Default = Color3.fromRGB(255, 255, 255),
-    Callback = function(c) print("Tracers Color:", c) end
-})
+ESPSection:AddLabel("Tracers"):AddToggle({Default = Settings.TracersEnabled, Callback = function(v) Settings.TracersEnabled = v; startMainUpdate() end})
+ESPSection:AddColorPicker({Default = Settings.TracersColor, Callback = function(c) Settings.TracersColor = c; startMainUpdate() end})
 
--- Chams
 local ChamsSection = VisualsTab:AddSection({Name = "Chams", Position = "Right"})
-ChamsSection:AddLabel("Enable Chams"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Chams:", v) end
-})
-ChamsSection:AddColorPicker({
-    Default = Color3.fromRGB(0, 255, 0),
-    Callback = function(c) print("Chams Color:", c) end
-})
-ChamsSection:AddLabel("RGB Humanoid"):AddToggle({
-    Default = false,
-    Callback = function(v) print("RGB Humanoid:", v) end
-})
+ChamsSection:AddLabel("Enable"):AddToggle({Default = Settings.ChamsEnabled, Callback = function(v) Settings.ChamsEnabled = v; updateChamsForAll(); startMainUpdate() end})
+ChamsSection:AddColorPicker({Default = Settings.ChamsColor, Callback = function(c) Settings.ChamsColor = c; if Settings.ChamsEnabled then updateChamsForAll() end})
+ChamsSection:AddLabel("RGB Humanoid"):AddToggle({Default = Settings.RGBHumanoid, Callback = function(v) Settings.RGBHumanoid = v; setupRGBHumanoid() end})
 
--- Effects
 local EffectsSection = VisualsTab:AddSection({Name = "Effects", Position = "Left"})
-EffectsSection:AddLabel("Jump Circles"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Jump Circles:", v) end
-})
-EffectsSection:AddColorPicker({
-    Default = Color3.fromRGB(255, 255, 255),
-    Callback = function(c) print("Jump Circles Color:", c) end
-})
-EffectsSection:AddLabel("Trails"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Trails:", v) end
-})
-EffectsSection:AddColorPicker({
-    Default = Color3.fromRGB(255, 255, 255),
-    Callback = function(c) print("Trails Color:", c) end
-})
-EffectsSection:AddLabel("XRay"):AddToggle({
-    Default = false,
-    Callback = function(v) print("XRay:", v) end
-})
-EffectsSection:AddLabel("Bloom"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Bloom:", v) end
-})
-EffectsSection:AddLabel("Vignette"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Vignette:", v) end
-})
+EffectsSection:AddLabel("Jump Circles"):AddToggle({Default = Settings.JumpCircles, Callback = function(v) Settings.JumpCircles = v end})
+EffectsSection:AddColorPicker({Default = Settings.JumpCirclesColor, Callback = function(c) Settings.JumpCirclesColor = c end})
+EffectsSection:AddLabel("Trails"):AddToggle({Default = Settings.Trails, Callback = function(v) Settings.Trails = v; if v then createLocalPlayerTrail() else removeLocalPlayerTrail() end})
+EffectsSection:AddColorPicker({Default = Settings.TrailsColor, Callback = function(c) Settings.TrailsColor = c; updateTrailColor() end})
+EffectsSection:AddLabel("XRay"):AddToggle({Default = Settings.XRayEnabled, Callback = function(v) Settings.XRayEnabled = v; setupXRay() end})
+EffectsSection:AddLabel("Bloom"):AddToggle({Default = Settings.BloomEnabled, Callback = function(v) Settings.BloomEnabled = v; setupBloom(v) end})
+EffectsSection:AddLabel("Vignette"):AddToggle({Default = Settings.VignetteEnabled, Callback = function(v) Settings.VignetteEnabled = v; setupVignette(v) end})
 
--- China Hat
 local ChinaSection = VisualsTab:AddSection({Name = "China Hat", Position = "Right"})
-ChinaSection:AddLabel("Enable"):AddToggle({
-    Default = false,
-    Callback = function(v) print("China Hat:", v) end
-})
-ChinaSection:AddColorPicker({
-    Default = Color3.fromRGB(0, 255, 255),
-    Callback = function(c) print("China Hat Color:", c) end
-})
-ChinaSection:AddLabel("Rainbow"):AddToggle({
-    Default = false,
-    Callback = function(v) print("China Hat Rainbow:", v) end
-})
+ChinaSection:AddLabel("Enable"):AddToggle({Default = Settings.ChinaHatEnabled, Callback = function(v) toggleChinaHat(v) end})
+ChinaSection:AddColorPicker({Default = Settings.ChinaHatColor, Callback = function(c) Settings.ChinaHatColor = c end})
+ChinaSection:AddLabel("Rainbow"):AddToggle({Default = Settings.ChinaHatRainbow, Callback = function(v) Settings.ChinaHatRainbow = v end})
 
--- Aura
 local AuraSection = VisualsTab:AddSection({Name = "Aura", Position = "Left"})
-AuraSection:AddLabel("Enable"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Aura:", v) end
-})
-AuraSection:AddColorPicker({
-    Default = Color3.fromRGB(255, 255, 255),
-    Callback = function(c) print("Aura Color:", c) end
-})
+AuraSection:AddLabel("Enable"):AddToggle({Default = Settings.AuraEnabled, Callback = function(v) Settings.AuraEnabled = v; if v then applyAura() else clearAura() end})
+AuraSection:AddColorPicker({Default = Settings.AuraColor, Callback = function(c) Settings.AuraColor = c; if Settings.AuraEnabled then applyAura() end})
 
--- World
 local WorldSection = VisualsTab:AddSection({Name = "World", Position = "Right"})
-WorldSection:AddLabel("Orbiz"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Orbiz:", v) end
-})
-WorldSection:AddLabel("Texture Pack"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Texture Pack:", v) end
-})
-WorldSection:AddLabel("Stretch"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Stretch:", v) end
-})
-WorldSection:AddSlider({
-    Default = 75,
-    Min = 50,
-    Max = 100,
-    Callback = function(v) print("Stretch Factor:", v) end
-})
+WorldSection:AddLabel("Orbiz"):AddToggle({Default = Settings.OrbizEnabled, Callback = function(v) Settings.OrbizEnabled = v; createOrbiz() end})
+WorldSection:AddLabel("Texture Pack"):AddToggle({Default = Settings.TexturePackEnabled, Callback = function(v) Settings.TexturePackEnabled = v; if v then applyTexturePack() else clearTexturePack() end})
+WorldSection:AddLabel("Stretch"):AddToggle({Default = Settings.StretchEnabled, Callback = function(v) Settings.StretchEnabled = v; applyStretch(v) end})
 
--- ========================================
--- ===== COMBAT TAB =====
--- ========================================
-
+-- 2. COMBAT
 local CombatTab = Window:AddTab({Name = "Combat", Icon = "crosshairs"})
 
 local CombatSection = CombatTab:AddSection({Name = "Combat", Position = "Left"})
-CombatSection:AddLabel("Shoot Button"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Shoot Button:", v) end
-})
-CombatSection:AddLabel("Sheriff Auto Shoot"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Sheriff Auto Shoot:", v) end
-})
-CombatSection:AddLabel("Kill All"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Kill All:", v) end
-})
-CombatSection:AddLabel("Fling Murderer"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Fling Murderer:", v) end
-})
-CombatSection:AddLabel("Fling Sheriff"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Fling Sheriff:", v) end
-})
-CombatSection:AddLabel("Grab Gun"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Grab Gun:", v) end
-})
+CombatSection:AddLabel("Shoot Button"):AddToggle({Default = Settings.ShootButtonEnabled, Callback = function(v) toggleShootButton(v) end})
+CombatSection:AddLabel("Sheriff Auto"):AddToggle({Default = Settings.SheriffAutoShootEnabled, Callback = function(v) toggleSheriffAutoShoot(v) end})
+CombatSection:AddLabel("Kill All"):AddToggle({Default = Settings.KillAllEnabled, Callback = function(v) toggleKillAll(v) end})
+CombatSection:AddLabel("Fling Murderer"):AddToggle({Default = Settings.FlingMurderer, Callback = function(v) if v then local m = getMurdererFling(); if m then flingPlayer(m) else Settings.FlingMurderer = false end end})
+CombatSection:AddLabel("Fling Sheriff"):AddToggle({Default = Settings.FlingSheriff, Callback = function(v) if v then local s = getSheriffFling(); if s then flingPlayer(s) else Settings.FlingSheriff = false end end})
+CombatSection:AddLabel("Grab Gun"):AddToggle({Default = Settings.GrabGunEnabled, Callback = function(v) if v then grabGunImproved() end})
 
 local AimbotSection = CombatTab:AddSection({Name = "Aimbot", Position = "Right"})
-AimbotSection:AddLabel("FOV Aimbot"):AddToggle({
-    Default = false,
-    Callback = function(v) print("FOV Aimbot:", v) end
-})
-AimbotSection:AddSlider({
-    Default = 120,
-    Min = 10,
-    Max = 600,
-    Callback = function(v) print("FOV Radius:", v) end
-})
-AimbotSection:AddSlider({
-    Default = 50,
-    Min = 1,
-    Max = 100,
-    Callback = function(v) print("Smoothness:", v) end
-})
-AimbotSection:AddLabel("Predict"):AddToggle({
-    Default = true,
-    Callback = function(v) print("Predict:", v) end
-})
-AimbotSection:AddLabel("Wall Check"):AddToggle({
-    Default = true,
-    Callback = function(v) print("Wall Check:", v) end
-})
+AimbotSection:AddLabel("FOV Aimbot"):AddToggle({Default = Settings.FovAimbotEnabled, Callback = function(v) Settings.FovAimbotEnabled = v; setupFovAimbot() end})
+AimbotSection:AddSlider({Default = Settings.FovRadius, Min = 10, Max = 600, Callback = function(v) Settings.FovRadius = v; if Cache.FovCircle then Cache.FovCircle.Radius = Settings.FovRadius end})
+AimbotSection:AddSlider({Default = 50, Min = 1, Max = 100, Callback = function(v) Settings.AimSmoothness = v / 100 end})
+AimbotSection:AddLabel("Predict"):AddToggle({Default = Settings.AimPredict, Callback = function(v) Settings.AimPredict = v end})
+AimbotSection:AddLabel("Wall Check"):AddToggle({Default = Settings.AimWallCheck, Callback = function(v) Settings.AimWallCheck = v end})
 
--- ========================================
--- ===== MOVEMENT TAB =====
--- ========================================
-
+-- 3. MOVEMENT
 local MovementTab = Window:AddTab({Name = "Movement", Icon = "wind"})
 
 local MovementSection = MovementTab:AddSection({Name = "Movement", Position = "Left"})
-MovementSection:AddLabel("Fly"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Fly:", v) end
-})
-MovementSection:AddSlider({
-    Default = 50,
-    Min = 10,
-    Max = 200,
-    Callback = function(v) print("Fly Speed:", v) end
-})
-MovementSection:AddLabel("BHop"):AddToggle({
-    Default = false,
-    Callback = function(v) print("BHop:", v) end
-})
-MovementSection:AddSlider({
-    Default = 30,
-    Min = 10,
-    Max = 80,
-    Callback = function(v) print("BHop Speed:", v) end
-})
-MovementSection:AddLabel("Spin Bot"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Spin Bot:", v) end
-})
-MovementSection:AddSlider({
-    Default = 9999,
-    Min = 100,
-    Max = 20000,
-    Callback = function(v) print("Spin Speed:", v) end
-})
-MovementSection:AddLabel("Noclip"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Noclip:", v) end
-})
-MovementSection:AddLabel("Anti-Fling"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Anti-Fling:", v) end
-})
-MovementSection:AddLabel("Wall Hop"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Wall Hop:", v) end
-})
+MovementSection:AddLabel("Fly"):AddToggle({Default = Settings.FlyEnabled, Callback = function(v) toggleFly(v) end})
+MovementSection:AddSlider({Default = Settings.FlySpeed, Min = 10, Max = 200, Callback = function(v) Settings.FlySpeed = v end})
+MovementSection:AddLabel("BHop"):AddToggle({Default = Settings.BHopEnabled, Callback = function(v) toggleBHop(v) end})
+MovementSection:AddSlider({Default = Settings.BHopSpeed, Min = 10, Max = 80, Callback = function(v) Settings.BHopSpeed = v end})
+MovementSection:AddLabel("Spin Bot"):AddToggle({Default = Settings.SpinBotEnabled, Callback = function(v) toggleSpinBot(v) end})
+MovementSection:AddSlider({Default = Settings.SpinBotSpeed, Min = 100, Max = 20000, Callback = function(v) SpinBot.Speed = v end})
+MovementSection:AddLabel("Noclip"):AddToggle({Default = Settings.NoclipEnabled, Callback = function(v) setupNoclip(v) end})
+MovementSection:AddLabel("Anti-Fling"):AddToggle({Default = Settings.AntiFlingEnabled, Callback = function(v) Settings.AntiFlingEnabled = v; setupAntiFling() end})
+MovementSection:AddLabel("Wall Hop"):AddToggle({Default = Settings.WallHopEnabled, Callback = function(v) toggleWallHop(v) end})
 
--- ========================================
--- ===== FARM TAB =====
--- ========================================
-
+-- 4. FARM
 local FarmTab = Window:AddTab({Name = "Farm", Icon = "tractor"})
 
 local FarmSection = FarmTab:AddSection({Name = "Auto Farm", Position = "Left"})
-FarmSection:AddLabel("Enable"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Auto Farm:", v) end
-})
-FarmSection:AddLabel("Auto Respawn"):AddToggle({
-    Default = true,
-    Callback = function(v) print("Auto Respawn:", v) end
-})
-FarmSection:AddSlider({
-    Default = 20,
-    Min = 5,
-    Max = 50,
-    Callback = function(v) print("Farm Speed:", v) end
-})
-FarmSection:AddSlider({
-    Default = 40,
-    Min = 10,
-    Max = 100,
-    Callback = function(v) print("Coin Limit:", v) end
-})
+FarmSection:AddLabel("Enable"):AddToggle({Default = Settings.AutoFarmEnabled, Callback = function(v) Settings.AutoFarmEnabled = v; setupAutoFarm() end})
+FarmSection:AddLabel("Auto Respawn"):AddToggle({Default = Settings.AutoRespawn, Callback = function(v) Settings.AutoRespawn = v end})
+FarmSection:AddSlider({Default = Settings.AutoFarmSpeed, Min = 5, Max = 50, Callback = function(v) Settings.AutoFarmSpeed = v end})
+FarmSection:AddSlider({Default = Settings.AutoFarmCoinLimit, Min = 10, Max = 100, Callback = function(v) Settings.AutoFarmCoinLimit = v end})
 
--- ========================================
--- ===== ANIMATIONS TAB =====
--- ========================================
-
+-- 5. ANIMATIONS
 local AnimationsTab = Window:AddTab({Name = "Animations", Icon = "music"})
 
 local AnimSection = AnimationsTab:AddSection({Name = "Animations", Position = "Left"})
-AnimSection:AddLabel("Enable"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Animations:", v) end
-})
+AnimSection:AddLabel("Enable"):AddToggle({Default = Settings.AnimPackEnabled, Callback = function(v) Settings.AnimPackEnabled = v; if v and Settings.AnimPack ~= "" then applyAnimPack(Settings.AnimPack) end})
 
-local AnimGridSection = AnimationsTab:AddSection({Name = "Select Pack", Position = "Right"})
+local AnimGrid = AnimationsTab:AddSection({Name = "Select Pack", Position = "Right"})
 for _, packName in ipairs(ANIM_PACK_NAMES) do
-    AnimGridSection:AddButton({
-        Name = packName,
-        Callback = function() print("Selected:", packName) end
-    })
+    AnimGrid:AddButton({Name = packName, Callback = function() Settings.AnimPack = packName; applyAnimPack(packName) end})
 end
 
--- ========================================
--- ===== FUN TAB =====
--- ========================================
-
+-- 6. FUN
 local FunTab = Window:AddTab({Name = "Fun", Icon = "smile"})
 
 local FunSection = FunTab:AddSection({Name = "Fun", Position = "Left"})
-FunSection:AddLabel("Jerk"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Jerk:", v) end
-})
-FunSection:AddLabel("Anti-AFK"):AddToggle({
-    Default = false,
-    Callback = function(v) print("Anti-AFK:", v) end
-})
-FunSection:AddButton({
-    Name = "Rejoin",
-    Callback = function() print("Rejoin") end
-})
+FunSection:AddLabel("Jerk"):AddToggle({Default = Settings.JerkEnabled, Callback = function(v) toggleJerk(v) end})
+FunSection:AddLabel("Anti-AFK"):AddToggle({Default = Settings.AntiAFKEnabled, Callback = function(v) Settings.AntiAFKEnabled = v; setupAntiAFK() end})
+FunSection:AddButton({Name = "Rejoin", Callback = function() game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId, game.JobId, LocalPlayer) end})
 
 -- ========================================
 -- ===== НАСТРОЙКИ ОКНА =====
@@ -338,17 +150,13 @@ FunSection:AddButton({
 
 Window.UserSettings:AddLabel("Menu Keybind"):AddKeybind({
     Default = 'J',
-    Callback = function(v)
-        Window.Keybind = v
-    end,
+    Callback = function(v) Window.Keybind = v end,
 })
 
 Window.UserSettings:AddLabel('Menu Scale'):AddDropdown({
     Default = "Default",
     Values = {"Default", 'Large', 'Mobile', 'Small'},
-    Callback = function(v)
-        Window:SetSize(NeverLose.Scales[v])
-    end,
+    Callback = function(v) Window:SetSize(NeverLose.Scales[v]) end,
 })
 
 -- ========================================
@@ -356,4 +164,10 @@ Window.UserSettings:AddLabel('Menu Scale'):AddDropdown({
 -- ========================================
 
 Window:ToggleInterface()
+startMainUpdate()
+setupFlyKeys()
+createFovCircle()
+createChinaHatDrawings()
+
+notify("Planet Hub", "Загружен! Нажми J", 4)
 print("✅ PLANET HUB LOADED!")
